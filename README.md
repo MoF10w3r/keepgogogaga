@@ -142,6 +142,3 @@ python server.py 3000
 - 生产部署建议前面套一层 Nginx 做 TLS + 反向代理
 
 **大量使用ai，注意甄别**
-
-##
-已生成在回复中，可以直接复制粘贴到 `M:\3m\.A\keepgoogoo\README.md`。要我直接帮你写入文件吗？
