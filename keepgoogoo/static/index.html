@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鸽子养殖后台管理系统</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <!-- 登录/注册页（覆盖全屏） -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-circle">
+                    <span class="logo-text">鸽</span>
+                </div>
+                <h2 id="authTitle">用户登录</h2>
+            </div>
+            <div class="auth-form">
+                <div class="form-group">
+                    <label for="authUsername">用户名</label>
+                    <input type="text" id="authUsername" placeholder="请输入用户名" class="form-input" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">密码</label>
+                    <input type="password" id="authPassword" placeholder="请输入密码" class="form-input" autocomplete="current-password">
+                </div>
+                <div class="form-group" id="confirmGroup" style="display:none;">
+                    <label for="authConfirm">确认密码</label>
+                    <input type="password" id="authConfirm" placeholder="请再次输入密码" class="form-input" autocomplete="new-password">
+                </div>
+                <p class="auth-error" id="authError"></p>
+                <button class="btn btn-primary btn-block" id="authSubmitBtn" onclick="handleAuth()">登 录</button>
+                <p class="auth-switch">
+                    <span id="switchText">还没有账号？</span>
+                    <a href="javascript:void(0)" id="switchLink" onclick="toggleAuthMode()">立即注册</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-area">
+                <div class="logo-circle">
+                    <span class="logo-text">鸽</span>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="home" onclick="switchPage('home', event)">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">系统首页</span>
+            </a>
+            <a href="#" class="nav-item" data-page="warehouse" onclick="switchPage('warehouse', event)">
+                <span class="nav-icon">📦</span>
+                <span class="nav-label">鸽仓信息列表</span>
+            </a>
+            <a href="#" class="nav-item" data-page="export" onclick="switchPage('export', event)">
+                <span class="nav-icon">📤</span>
+                <span class="nav-label">导出预放仔名单</span>
+            </a>
+            <a href="#" class="nav-item" data-page="process" onclick="switchPage('process', event)">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">导出待处理异常名单</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content" id="mainContent">
+        <!-- 顶部导航栏 -->
+        <header class="topbar">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h1 class="topbar-title">鸽子养殖后台管理系统</h1>
+            <div class="topbar-right">
+                <span class="topbar-user" id="topbarUser">👤</span>
+                <a href="javascript:void(0)" class="logout-link" onclick="handleLogout()" id="logoutLink" style="display:none;">退出</a>
+            </div>
+        </header>
+
+        <!-- 面包屑 + 操作按钮 -->
+        <div class="toolbar" id="toolbar">
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="crumb active" id="crumb1">系统首页</span>
+                <button class="crumb-close" id="crumbClose1" onclick="closeCrumb(1)" title="关闭">×</button>
+            </div>
+            <div class="toolbar-actions" id="toolbarActions">
+                <button class="btn btn-primary" id="btnAdd" onclick="handleAdd()">＋ 添加</button>
+                <button class="btn btn-danger" id="btnDelete" onclick="handleDelete()">－ 删除仓库</button>
+                <button class="btn btn-info" id="btnManage" onclick="handleManage()">管理</button>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content-body" id="contentBody">
+            <!-- 仓库列表页面 -->
+            <div class="page" id="pageWarehouse" style="display:none;">
+                <div class="page-header">
+                    <h2>仓库列表</h2>
+                    <input type="text" class="search-input" placeholder="搜索仓库ID" id="searchWh" oninput="filterTable()">
+                </div>
+                <table class="data-table" id="whTable">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"></th>
+                            <th style="width:60px;">序号</th>
+                            <th style="width:100px;">仓库ID</th>
+                            <th style="width:auto;">仓库名称</th>
+                            <th style="width:100px;">总排数</th>
+                            <th style="width:100px;">总列数</th>
+                            <th style="width:100px;">总笼数</th>
+                            <th style="width:120px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="whTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+                <div class="pagination" id="whPagination"></div>
+            </div>
+
+            <!-- 排管理弹窗 -->
+            <div class="modal-overlay" id="rowModal" style="display:none;">
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 id="rowModalTitle">排管理</h3>
+                        <button class="modal-close" onclick="closeModal('rowModal')">×</button>
+                    </div>
+                    <div class="modal-search">
+                        <input type="text" placeholder="搜索排编号" id="searchRow" oninput="filterRowTable()">
+                    </div>
+                    <div class="modal-toolbar">
+                        <button class="btn btn-primary" onclick="handleAddRow()">＋ 添加排</button>
+                        <button class="btn btn-danger" onclick="handleDeleteRow()">－ 删除排</button>
+                        <button class="btn btn-success" onclick="handleManageColumns()">管理列</button>
+                        <button class="btn btn-default" onclick="closeModal('rowModal')">返回</button>
+                    </div>
+                    <table class="data-table modal-table" id="rowTable">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th style="width:100px;">排编号</th>
+                                <th style="width:100px;">列总数</th>
+                                <th style="width:120px;">每列笼数</th>
+                                <th style="width:100px;">总笼数</th>
+                                <th style="width:120px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rowTableBody">
+                            <!-- 动态填充 -->
+                        </tbody>
+                    </table>
+                    <div class="pagination" id="rowPagination"></div>
+                </div>
+            </div>
+
+            <!-- 列管理弹窗 -->
+            <div class="modal-overlay" id="colModal" style="display:none;">
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 id="colModalTitle">列管理</h3>
+                        <button class="modal-close" onclick="closeModal('colModal')">×</button>
+                    </div>
+                    <div class="modal-search">
+                        <input type="text" placeholder="搜索列编号" id="searchCol" oninput="filterColTable()">
+                    </div>
+                    <div class="modal-toolbar">
+                        <button class="btn btn-primary" onclick="handleAddCol()">＋ 添加列</button>
+                        <button class="btn btn-danger" onclick="handleDeleteCol()">－ 删除列</button>
+                        <button class="btn btn-success" onclick="handleManageCages()">管理笼</button>
+                        <button class="btn btn-default" onclick="closeModal('colModal')">返回</button>
+                    </div>
+                    <table class="data-table modal-table" id="colTable">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th style="width:100px;">列编号</th>
+                                <th style="width:100px;">总笼数</th>
+                                <th style="width:120px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="colTableBody">
+                            <!-- 动态填充 -->
+                        </tbody>
+                    </table>
+                    <div class="pagination" id="colPagination"></div>
+                </div>
+            </div>
+
+            <!-- 笼管理弹窗 -->
+            <div class="modal-overlay" id="cageModal" style="display:none;">
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3 id="cageModalTitle">笼管理</h3>
+                        <button class="modal-close" onclick="closeModal('cageModal')">×</button>
+                    </div>
+                    <div class="modal-search">
+                        <input type="text" placeholder="搜索笼编号" id="searchCage" oninput="filterCageTable()">
+                    </div>
+                    <div class="modal-toolbar">
+                        <button class="btn btn-primary" onclick="handleAddCage()">＋ 添加笼</button>
+                        <button class="btn btn-danger" onclick="handleDeleteCage()">－ 删除笼</button>
+                        <button class="btn btn-default" onclick="closeModal('cageModal')">返回</button>
+                    </div>
+                    <table class="data-table modal-table" id="cageTable">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th style="width:100px;">笼编号</th>
+                                <th style="width:80px;">笼ID</th>
+                                <th style="width:120px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cageTableBody">
+                            <!-- 动态填充 -->
+                        </tbody>
+                    </table>
+                    <div class="pagination" id="cagePagination"></div>
+                </div>
+            </div>
+
+            <!-- 首页/其他页占位 -->
+            <div class="page" id="pageHome">
+                <div class="welcome-card">
+                    <h2>🕊️ 欢迎使用鸽子养殖后台管理系统</h2>
+                    <p>请从左侧菜单选择功能模块，或点击下方按钮开始管理鸽仓。</p>
+                    <button class="btn btn-primary btn-lg" onclick="switchPage('warehouse', event)">进入鸽仓管理 →</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 通用确认弹窗 -->
+    <div class="modal-overlay" id="confirmModal" style="display:none;">
+        <div class="modal-dialog confirm-dialog">
+            <div class="modal-header">
+                <h3 id="confirmTitle">确认操作</h3>
+                <button class="modal-close" onclick="closeModal('confirmModal')">×</button>
+            </div>
+            <div class="confirm-body" id="confirmBody"></div>
+            <div class="confirm-footer">
+                <button class="btn btn-danger" id="confirmOkBtn">确认删除</button>
+                <button class="btn btn-default" onclick="closeModal('confirmModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通用输入弹窗 -->
+    <div class="modal-overlay" id="inputModal" style="display:none;">
+        <div class="modal-dialog input-dialog">
+            <div class="modal-header">
+                <h3 id="inputTitle">添加</h3>
+                <button class="modal-close" onclick="closeModal('inputModal')">×</button>
+            </div>
+            <div class="input-body">
+                <label id="inputLabel" for="inputField">名称：</label>
+                <input type="text" id="inputField" class="form-input" placeholder="请输入...">
+            </div>
+            <div class="confirm-footer">
+                <button class="btn btn-primary" id="inputOkBtn">确定</button>
+                <button class="btn btn-default" onclick="closeModal('inputModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "warehouses": [
+    {
+      "id": 3,
+      "name": "咕咕嘎嘎",
+      "rows": [
+        {
+          "id": 2,
+          "row_number": 1,
+          "columns": [
+            {
+              "id": 2,
+              "col_number": 1,
+              "cages": []
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "row_number": 1,
+          "columns": []
+        }
+      ]
+    }
+  ],
+  "next_ids": {
+    "warehouse": 4,
+    "row": 4,
+    "column": 3,
+    "cage": 2
+  }
+}
